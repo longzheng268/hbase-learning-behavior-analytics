@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习行为数据分析系统 - HBase</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>📊 学习行为分析</h2>
+                <p class="subtitle">HBase 大数据存储系统</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard"><span>📈</span> 数据概览</li>
+                <li class="nav-item" data-page="behaviors"><span>📋</span> 行为记录</li>
+                <li class="nav-item" data-page="query"><span>🔍</span> 多维查询</li>
+                <li class="nav-item" data-page="students"><span>👨‍🎓</span> 学生概况</li>
+                <li class="nav-item" data-page="statistics"><span>📊</span> 统计分析</li>
+                <li class="nav-item" data-page="manage"><span>⚙️</span> 数据管理</li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="btn-init" class="btn btn-primary btn-block">🚀 初始化演示数据</button>
+                <p id="init-status" class="init-status"></p>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div class="page active" id="page-dashboard">
+                <h1>数据概览</h1>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-icon">👨‍🎓</div><div class="stat-value" id="stat-students">-</div><div class="stat-label">学生总数</div></div>
+                    <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-value" id="stat-courses">-</div><div class="stat-label">课程总数</div></div>
+                    <div class="stat-card"><div class="stat-icon">📁</div><div class="stat-value" id="stat-resources">-</div><div class="stat-label">资源总数</div></div>
+                    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value" id="stat-behaviors">-</div><div class="stat-label">行为记录数</div></div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-box"><h3>每日学习趋势</h3><div id="chart-daily" class="chart"></div></div>
+                    <div class="chart-box"><h3>学习时段分布</h3><div id="chart-hourly" class="chart"></div></div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-box"><h3>学生活跃度排行 (Top 10)</h3><div id="chart-student-rank" class="chart"></div></div>
+                    <div class="chart-box"><h3>课程访问量排行</h3><div id="chart-course-rank" class="chart"></div></div>
+                </div>
+            </div>
+
+            <!-- Behaviors Page -->
+            <div class="page" id="page-behaviors">
+                <h1>学习行为记录</h1>
+                <div class="toolbar">
+                    <select id="filter-type"><option value="">全部类型</option></select>
+                    <button class="btn" id="btn-refresh-behaviors">刷新</button>
+                </div>
+                <table class="data-table" id="table-behaviors">
+                    <thead>
+                        <tr><th>RowKey</th><th>学生</th><th>课程</th><th>行为类型</th><th>时间</th><th>设备</th><th>详情</th><th>操作</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="pager" id="pager-behaviors"></div>
+            </div>
+
+            <!-- Query Page -->
+            <div class="page" id="page-query">
+                <h1>多维查询</h1>
+                <div class="query-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>学生</label>
+                            <select id="q-student"><option value="">全部学生</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>课程</label>
+                            <select id="q-course"><option value="">全部课程</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>行为类型</label>
+                            <select id="q-type"><option value="">全部类型</option></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>开始时间</label>
+                            <input type="datetime-local" id="q-start">
+                        </div>
+                        <div class="form-group">
+                            <label>结束时间</label>
+                            <input type="datetime-local" id="q-end">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-primary" id="btn-search">🔍 查询</button>
+                            <button class="btn" id="btn-reset">重置</button>
+                        </div>
+                    </div>
+                </div>
+                <table class="data-table" id="table-query">
+                    <thead>
+                        <tr><th>RowKey</th><th>学生</th><th>课程</th><th>行为类型</th><th>时间</th><th>详情</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Student Profile Page -->
+            <div class="page" id="page-students">
+                <h1>学生学习概况</h1>
+                <div class="toolbar">
+                    <select id="student-select"><option value="">选择学生</option></select>
+                </div>
+                <div class="student-profile" id="student-profile" style="display:none;">
+                    <div class="profile-header">
+                        <div class="profile-info">
+                            <h2 id="sp-name"></h2>
+                            <p id="sp-detail"></p>
+                        </div>
+                        <div class="profile-stats">
+                            <div class="mini-stat"><span id="sp-total">0</span>总行为</div>
+                            <div class="mini-stat"><span id="sp-login">0</span>登录次数</div>
+                            <div class="mini-stat"><span id="sp-video">0</span>视频学习</div>
+                        </div>
+                    </div>
+                    <div class="chart-row">
+                        <div class="chart-box"><h3>行为类型分布</h3><div id="chart-stu-types" class="chart"></div></div>
+                        <div class="chart-box"><h3>学习趋势</h3><div id="chart-stu-trend" class="chart"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Page -->
+            <div class="page" id="page-statistics">
+                <h1>统计分析</h1>
+                <div class="chart-row">
+                    <div class="chart-box"><h3>登录次数统计</h3><div id="chart-login" class="chart"></div></div>
+                    <div class="chart-box"><h3>视频学习总时长(秒)</h3><div id="chart-video" class="chart"></div></div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-box"><h3>资源浏览次数</h3><div id="chart-resource" class="chart"></div></div>
+                    <div class="chart-box"><h3>练习/作业提交统计</h3><div id="chart-submit" class="chart"></div></div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-box" style="width:100%"><h3>学习预警：超过7天未活跃学生</h3><div id="inactive-list" class="inactive-list"></div></div>
+                </div>
+            </div>
+
+            <!-- Manage Page -->
+            <div class="page" id="page-manage">
+                <h1>数据管理</h1>
+                <div class="manage-grid">
+                    <div class="manage-card">
+                        <h3>📝 记录新行为</h3>
+                        <form id="form-add-behavior">
+                            <div class="form-group"><label>学生ID</label><select id="add-student"></select></div>
+                            <div class="form-group"><label>课程ID</label><select id="add-course"></select></div>
+                            <div class="form-group"><label>行为类型</label><select id="add-type"></select></div>
+                            <div class="form-group"><label>资源ID(可选)</label><input id="add-resource"></div>
+                            <div class="form-group"><label>设备</label><input id="add-device" value="PC-Chrome"></div>
+                            <div class="form-group"><label>时长/分数(可选)</label><input id="add-value" type="number"></div>
+                            <div class="form-group"><label>状态</label><input id="add-status" value="completed"></div>
+                            <button type="submit" class="btn btn-primary">提交</button>
+                        </form>
+                    </div>
+                    <div class="manage-card">
+                        <h3>🗑️ 删除行为记录</h3>
+                        <form id="form-delete">
+                            <div class="form-group"><label>RowKey</label><input id="del-rowkey" required></div>
+                            <button type="submit" class="btn btn-danger">删除</button>
+                        </form>
+                    </div>
+                    <div class="manage-card">
+                        <h3>✏️ 更新行为记录</h3>
+                        <form id="form-update">
+                            <div class="form-group"><label>RowKey</label><input id="upd-rowkey" required></div>
+                            <div class="form-group"><label>字段名</label><input id="upd-field" value="status"></div>
+                            <div class="form-group"><label>新值</label><input id="upd-value"></div>
+                            <button type="submit" class="btn btn-primary">更新</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="hbase-shell-info">
+                    <h3>🔧 HBase Shell 验证</h3>
+                    <p>启动 HBase Shell 后可使用以下命令验证数据：</p>
+                    <pre><code>hbase shell
+scan 'learning:learning_behavior', {LIMIT => 10}
+get 'learning:learning_behavior', 'S0001_XXXXXXXX_LOGIN_0001'
+count 'learning:learning_behavior'</code></pre>
+                    <p>表名: <code id="hbase-table-name">learning:learning_behavior</code></p>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/js/app.js"></script>
+</body>
+</html>
