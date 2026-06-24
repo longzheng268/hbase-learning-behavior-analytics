@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:sqlite:./data/learning.db
+    driver-class-name: org.sqlite.JDBC
+
+hbase:
+  namespace: learning
+  zookeeper:
+    quorum: localhost
+    port: 2181
+
+logging:
+  level:
+    com.learning: DEBUG
