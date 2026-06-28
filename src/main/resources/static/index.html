@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>学习行为数据分析系统 - HBase</title>
+    <title>学习行为数据分析系统</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -12,19 +12,19 @@
         <!-- Sidebar -->
         <nav class="sidebar">
             <div class="logo">
-                <h2>📊 学习行为分析</h2>
-                <p class="subtitle">HBase 大数据存储系统</p>
+                <h2>学习行为分析系统</h2>
+                <p class="subtitle">HBase 大数据存储</p>
             </div>
             <ul class="nav-menu">
-                <li class="nav-item active" data-page="dashboard"><span>📈</span> 数据概览</li>
-                <li class="nav-item" data-page="behaviors"><span>📋</span> 行为记录</li>
-                <li class="nav-item" data-page="query"><span>🔍</span> 多维查询</li>
-                <li class="nav-item" data-page="students"><span>👨‍🎓</span> 学生概况</li>
-                <li class="nav-item" data-page="statistics"><span>📊</span> 统计分析</li>
-                <li class="nav-item" data-page="manage"><span>⚙️</span> 数据管理</li>
+                <li class="nav-item active" data-page="dashboard">数据概览</li>
+                <li class="nav-item" data-page="behaviors">行为记录</li>
+                <li class="nav-item" data-page="query">多维查询</li>
+                <li class="nav-item" data-page="students">学生概况</li>
+                <li class="nav-item" data-page="statistics">统计分析</li>
+                <li class="nav-item" data-page="manage">数据管理</li>
             </ul>
             <div class="sidebar-footer">
-                <button id="btn-init" class="btn btn-primary btn-block">🚀 初始化演示数据</button>
+                <button id="btn-init" class="btn btn-primary btn-block">初始化演示数据</button>
                 <p id="init-status" class="init-status"></p>
             </div>
         </nav>
@@ -35,10 +35,10 @@
             <div class="page active" id="page-dashboard">
                 <h1>数据概览</h1>
                 <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-icon">👨‍🎓</div><div class="stat-value" id="stat-students">-</div><div class="stat-label">学生总数</div></div>
-                    <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-value" id="stat-courses">-</div><div class="stat-label">课程总数</div></div>
-                    <div class="stat-card"><div class="stat-icon">📁</div><div class="stat-value" id="stat-resources">-</div><div class="stat-label">资源总数</div></div>
-                    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value" id="stat-behaviors">-</div><div class="stat-label">行为记录数</div></div>
+                    <div class="stat-card"><div class="stat-value" id="stat-students">-</div><div class="stat-label">学生总数</div></div>
+                    <div class="stat-card"><div class="stat-value" id="stat-courses">-</div><div class="stat-label">课程总数</div></div>
+                    <div class="stat-card"><div class="stat-value" id="stat-resources">-</div><div class="stat-label">资源总数</div></div>
+                    <div class="stat-card"><div class="stat-value" id="stat-behaviors">-</div><div class="stat-label">行为记录数</div></div>
                 </div>
                 <div class="chart-row">
                     <div class="chart-box"><h3>每日学习趋势</h3><div id="chart-daily" class="chart"></div></div>
@@ -94,7 +94,7 @@
                             <input type="datetime-local" id="q-end">
                         </div>
                         <div class="form-group">
-                            <button class="btn btn-primary" id="btn-search">🔍 查询</button>
+                            <button class="btn btn-primary" id="btn-search">查询</button>
                             <button class="btn" id="btn-reset">重置</button>
                         </div>
                     </div>
@@ -153,7 +153,7 @@
                 <h1>数据管理</h1>
                 <div class="manage-grid">
                     <div class="manage-card">
-                        <h3>📝 记录新行为</h3>
+                        <h3>记录新行为</h3>
                         <form id="form-add-behavior">
                             <div class="form-group"><label>学生ID</label><select id="add-student"></select></div>
                             <div class="form-group"><label>课程ID</label><select id="add-course"></select></div>
@@ -166,14 +166,14 @@
                         </form>
                     </div>
                     <div class="manage-card">
-                        <h3>🗑️ 删除行为记录</h3>
+                        <h3>删除行为记录</h3>
                         <form id="form-delete">
                             <div class="form-group"><label>RowKey</label><input id="del-rowkey" required></div>
                             <button type="submit" class="btn btn-danger">删除</button>
                         </form>
                     </div>
                     <div class="manage-card">
-                        <h3>✏️ 更新行为记录</h3>
+                        <h3>更新行为记录</h3>
                         <form id="form-update">
                             <div class="form-group"><label>RowKey</label><input id="upd-rowkey" required></div>
                             <div class="form-group"><label>字段名</label><input id="upd-field" value="status"></div>
@@ -183,7 +183,7 @@
                     </div>
                 </div>
                 <div class="hbase-shell-info">
-                    <h3>🔧 HBase Shell 验证</h3>
+                    <h3>HBase Shell 验证</h3>
                     <p>启动 HBase Shell 后可使用以下命令验证数据：</p>
                     <pre><code>hbase shell
 scan 'learning:learning_behavior', {LIMIT => 10}
