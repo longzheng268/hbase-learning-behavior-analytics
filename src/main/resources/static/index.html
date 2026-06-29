@@ -151,43 +151,60 @@
             <!-- Manage Page -->
             <div class="page" id="page-manage">
                 <h1>数据管理</h1>
-                <div class="manage-grid">
-                    <div class="manage-card">
-                        <h3>记录新行为</h3>
-                        <form id="form-add-behavior">
-                            <div class="form-group"><label>学生ID</label><select id="add-student"></select></div>
-                            <div class="form-group"><label>课程ID</label><select id="add-course"></select></div>
-                            <div class="form-group"><label>行为类型</label><select id="add-type"></select></div>
-                            <div class="form-group"><label>资源ID(可选)</label><input id="add-resource"></div>
-                            <div class="form-group"><label>设备</label><input id="add-device" value="PC-Chrome"></div>
-                            <div class="form-group"><label>时长/分数(可选)</label><input id="add-value" type="number"></div>
-                            <div class="form-group"><label>状态</label><input id="add-status" value="completed"></div>
-                            <button type="submit" class="btn btn-primary">提交</button>
-                        </form>
+
+                <!-- 数据表格（Excel风格） -->
+                <div class="manage-excel">
+                    <div class="toolbar">
+                        <select id="m-filter-student"><option value="">全部学生</option></select>
+                        <select id="m-filter-course"><option value="">全部课程</option></select>
+                        <select id="m-filter-type"><option value="">全部类型</option></select>
+                        <button class="btn" id="m-btn-search">查询</button>
+                        <button class="btn" id="m-btn-refresh">刷新</button>
+                        <span id="m-count" style="margin-left:auto;font-size:12px;color:#444"></span>
                     </div>
-                    <div class="manage-card">
-                        <h3>删除行为记录</h3>
-                        <form id="form-delete">
-                            <div class="form-group"><label>RowKey</label><input id="del-rowkey" required></div>
-                            <button type="submit" class="btn btn-danger">删除</button>
-                        </form>
+                    <div class="excel-wrapper">
+                        <table class="excel-table" id="excel-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:30px">#</th>
+                                    <th>RowKey</th>
+                                    <th>学生</th>
+                                    <th>课程</th>
+                                    <th>行为类型</th>
+                                    <th>时间</th>
+                                    <th>设备</th>
+                                    <th>状态</th>
+                                    <th>分数</th>
+                                    <th>时长</th>
+                                    <th style="width:100px">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
-                    <div class="manage-card">
-                        <h3>更新行为记录</h3>
-                        <form id="form-update">
-                            <div class="form-group"><label>RowKey</label><input id="upd-rowkey" required></div>
-                            <div class="form-group"><label>字段名</label><input id="upd-field" value="status"></div>
-                            <div class="form-group"><label>新值</label><input id="upd-value"></div>
-                            <button type="submit" class="btn btn-primary">更新</button>
-                        </form>
-                    </div>
+                    <div class="pager" id="pager-manage"></div>
                 </div>
+
+                <!-- 新增行为 -->
+                <div class="manage-section">
+                    <h3>新增行为记录</h3>
+                    <form id="form-add-behavior" class="manage-form">
+                        <div class="form-group"><label>学生</label><select id="add-student"></select></div>
+                        <div class="form-group"><label>课程</label><select id="add-course"></select></div>
+                        <div class="form-group"><label>行为类型</label><select id="add-type"></select></div>
+                        <div class="form-group"><label>资源(可选)</label><select id="add-resource"><option value="">无</option></select></div>
+                        <div class="form-group"><label>设备</label><select id="add-device"><option>PC-Chrome</option><option>PC-Firefox</option><option>Android</option><option>iOS</option><option>iPad</option></select></div>
+                        <div class="form-group"><label>时长/分数</label><input id="add-value" type="number"></div>
+                        <div class="form-group"><label>状态</label><select id="add-status"><option>completed</option><option>success</option><option>submitted</option><option>start</option><option>end</option><option>enter</option><option>leave</option><option>viewed</option></select></div>
+                        <button type="submit" class="btn btn-primary">提交</button>
+                    </form>
+                </div>
+
+                <!-- HBase Shell -->
                 <div class="hbase-shell-info">
                     <h3>HBase Shell 验证</h3>
-                    <p>启动 HBase Shell 后可使用以下命令验证数据：</p>
                     <pre><code>hbase shell
 scan 'learning:learning_behavior', {LIMIT => 10}
-get 'learning:learning_behavior', 'S0001_XXXXXXXX_LOGIN_0001'
 count 'learning:learning_behavior'</code></pre>
                     <p>表名: <code id="hbase-table-name">learning:learning_behavior</code></p>
                 </div>

@@ -530,20 +530,183 @@ async function loadStatistics() {
 // ============================================================
 // Manage Page
 // ============================================================
+let manageData = [];
+let managePage = 1;
+const MANAGE_PAGE_SIZE = 30;
+
 async function loadManagePage() {
     await loadBaseData();
     populateSelect('add-student', allStudents, 'studentId', 'name', false);
     populateSelect('add-course', allCourses, 'courseId', 'courseName', false);
+    populateSelect('m-filter-student', allStudents, 'studentId', 'name');
+    populateSelect('m-filter-course', allCourses, 'courseId', 'courseName');
+
     const typeSel = document.getElementById('add-type');
     typeSel.innerHTML = '';
     ['LOGIN','COURSE_ACCESS','RESOURCE_BROWSE','VIDEO_WATCH','QUIZ_SUBMIT','HOMEWORK_SUBMIT'].forEach(t => {
         typeSel.innerHTML += `<option value="${t}">${t}</option>`;
     });
+    const resSel = document.getElementById('add-resource');
+    resSel.innerHTML = '<option value="">无</option>';
+    allResources.forEach(r => {
+        resSel.innerHTML += `<option value="${r.resourceId}">${r.resourceId} - ${r.resourceName}</option>`;
+    });
+
+    const mTypeSel = document.getElementById('m-filter-type');
+    mTypeSel.innerHTML = '<option value="">全部类型</option>';
+    ['LOGIN','COURSE_ACCESS','RESOURCE_BROWSE','VIDEO_WATCH','QUIZ_SUBMIT','HOMEWORK_SUBMIT'].forEach(t => {
+        mTypeSel.innerHTML += `<option value="${t}">${t}</option>`;
+    });
+
     try {
         const resp = await api('/api/behavior/table-name');
         if (resp.data) document.getElementById('hbase-table-name').textContent = resp.data;
     } catch(e) {}
+
+    loadManageData();
 }
+
+async function loadManageData() {
+    const resp = await api('/api/behavior/search');
+    manageData = resp.data || [];
+    applyManageFilter();
+}
+
+function applyManageFilter() {
+    const sid = document.getElementById('m-filter-student').value;
+    const cid = document.getElementById('m-filter-course').value;
+    const type = document.getElementById('m-filter-type').value;
+    let filtered = manageData;
+    if (sid) filtered = filtered.filter(b => b.studentId === sid);
+    if (cid) filtered = filtered.filter(b => b.courseId === cid);
+    if (type) filtered = filtered.filter(b => b.behaviorType === type);
+    document.getElementById('m-count').textContent = '共 ' + filtered.length + ' 条';
+    renderExcelTable(filtered, 1);
+}
+
+function renderExcelTable(data, page) {
+    managePage = page;
+    const tbody = document.querySelector('#excel-table tbody');
+    const start = (page - 1) * MANAGE_PAGE_SIZE;
+    const slice = data.slice(start, start + MANAGE_PAGE_SIZE);
+
+    tbody.innerHTML = slice.map((b, i) => {
+        const idx = start + i + 1;
+        const dt = b.timestamp ? new Date(b.timestamp).toLocaleString('zh-CN', {hour12:false}) : '-';
+        return `<tr data-rk="${b.rowKey}">
+            <td class="rowidx">${idx}</td>
+            <td class="rowkey-cell" title="${b.rowKey}">${b.rowKey.substring(0,35)}...</td>
+            <td class="editable" data-field="student_id" data-val="${b.studentId}">${getStudentName(b.studentId)}</td>
+            <td class="editable" data-field="course_id" data-val="${b.courseId}">${getCourseName(b.courseId)}</td>
+            <td class="editable" data-field="behavior_type" data-val="${b.behaviorType}">${behaviorBadge(b.behaviorType)}</td>
+            <td>${dt}</td>
+            <td class="editable" data-field="device" data-val="${b.device||''}">${b.device||'-'}</td>
+            <td class="editable" data-field="status" data-val="${b.status||''}">${b.status||'-'}</td>
+            <td class="editable" data-field="score" data-val="${b.score!=null?b.score:''}">${b.score!=null?b.score:'-'}</td>
+            <td class="editable" data-field="duration" data-val="${b.duration!=null?b.duration:''}">${b.duration!=null?b.duration+'s':'-'}</td>
+            <td>
+                <button class="btn btn-sm" onclick="editRow(this)">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">删除</button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    // Pager
+    const totalPages = Math.ceil(data.length / MANAGE_PAGE_SIZE);
+    const pager = document.getElementById('pager-manage');
+    pager.innerHTML = '';
+    for (let i = 1; i <= Math.min(totalPages, 15); i++) {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm' + (i === page ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => renderExcelTable(data, i);
+        pager.appendChild(btn);
+    }
+
+    // Cell click to edit
+    tbody.querySelectorAll('td.editable').forEach(td => {
+        td.addEventListener('dblclick', () => startCellEdit(td));
+    });
+}
+
+function startCellEdit(td) {
+    if (td.querySelector('input, select')) return;
+    const field = td.dataset.field;
+    const val = td.dataset.val;
+    const rowKey = td.closest('tr').dataset.rk;
+
+    let html;
+    if (field === 'device') {
+        html = `<select class="cell-select" onchange="saveCell(this,'${rowKey}','${field}')">
+            <option ${val==='PC-Chrome'?'selected':''}>PC-Chrome</option>
+            <option ${val==='PC-Firefox'?'selected':''}>PC-Firefox</option>
+            <option ${val==='Android'?'selected':''}>Android</option>
+            <option ${val==='iOS'?'selected':''}>iOS</option>
+            <option ${val==='iPad'?'selected':''}>iPad</option>
+        </select>`;
+    } else if (field === 'status') {
+        html = `<select class="cell-select" onchange="saveCell(this,'${rowKey}','${field}')">
+            <option ${val==='completed'?'selected':''}>completed</option>
+            <option ${val==='success'?'selected':''}>success</option>
+            <option ${val==='submitted'?'selected':''}>submitted</option>
+            <option ${val==='start'?'selected':''}>start</option>
+            <option ${val==='end'?'selected':''}>end</option>
+            <option ${val==='enter'?'selected':''}>enter</option>
+            <option ${val==='leave'?'selected':''}>leave</option>
+            <option ${val==='viewed'?'selected':''}>viewed</option>
+        </select>`;
+    } else if (field === 'behavior_type') {
+        html = `<select class="cell-select" onchange="saveCell(this,'${rowKey}','${field}')">
+            <option ${val==='LOGIN'?'selected':''}>LOGIN</option>
+            <option ${val==='COURSE_ACCESS'?'selected':''}>COURSE_ACCESS</option>
+            <option ${val==='RESOURCE_BROWSE'?'selected':''}>RESOURCE_BROWSE</option>
+            <option ${val==='VIDEO_WATCH'?'selected':''}>VIDEO_WATCH</option>
+            <option ${val==='QUIZ_SUBMIT'?'selected':''}>QUIZ_SUBMIT</option>
+            <option ${val==='HOMEWORK_SUBMIT'?'selected':''}>HOMEWORK_SUBMIT</option>
+        </select>`;
+    } else if (field === 'score' || field === 'duration') {
+        html = `<input class="cell-input" type="number" value="${val}" onblur="saveCell(this,'${rowKey}','${field}')" onkeydown="if(event.key==='Enter')saveCell(this,'${rowKey}','${field}')">`;
+    } else {
+        html = `<input class="cell-input" value="${val||''}" onblur="saveCell(this,'${rowKey}','${field}')" onkeydown="if(event.key==='Enter')saveCell(this,'${rowKey}','${field}')">`;
+    }
+    td.innerHTML = html;
+    td.querySelector('input,select').focus();
+}
+
+async function saveCell(el, rowKey, field) {
+    let value = el.value;
+    if (field === 'score' && value) value = parseFloat(value).toString();
+    if (field === 'duration' && value) value = parseInt(value).toString();
+    const resp = await api('/api/behavior/' + encodeURIComponent(rowKey), {
+        method: 'PUT',
+        body: JSON.stringify({ [field]: value })
+    });
+    if (resp.code === 200) {
+        applyManageFilter();
+    } else {
+        alert('更新失败: ' + resp.message);
+        applyManageFilter();
+    }
+}
+
+function editRow(btn) {
+    const td = btn.closest('tr').querySelector('td.editable');
+    if (td) startCellEdit(td);
+}
+
+async function deleteRow(btn) {
+    const rowKey = btn.closest('tr').dataset.rk;
+    if (!confirm('确定删除该记录？')) return;
+    const resp = await api('/api/behavior/' + encodeURIComponent(rowKey), { method: 'DELETE' });
+    if (resp.code === 200) applyManageFilter();
+    else alert('删除失败: ' + resp.message);
+}
+
+document.getElementById('m-btn-search').addEventListener('click', applyManageFilter);
+document.getElementById('m-btn-refresh').addEventListener('click', loadManageData);
+document.getElementById('m-filter-student').addEventListener('change', applyManageFilter);
+document.getElementById('m-filter-course').addEventListener('change', applyManageFilter);
+document.getElementById('m-filter-type').addEventListener('change', applyManageFilter);
 
 // Add behavior form
 document.getElementById('form-add-behavior').addEventListener('submit', async (e) => {
@@ -564,31 +727,10 @@ document.getElementById('form-add-behavior').addEventListener('submit', async (e
     if ((type === 'QUIZ_SUBMIT' || type === 'HOMEWORK_SUBMIT') && val) behavior.score = parseFloat(val);
 
     const resp = await api('/api/behavior', { method: 'POST', body: JSON.stringify(behavior) });
-    if (resp.code === 200) alert('✅ 行为记录已写入 HBase！\nRowKey: ' + resp.data);
-    else alert('❌ 写入失败: ' + resp.message);
-});
-
-// Delete form
-document.getElementById('form-delete').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const rowKey = document.getElementById('del-rowkey').value;
-    if (!confirm('确定删除 RowKey: ' + rowKey + ' ?')) return;
-    const resp = await api('/api/behavior/' + encodeURIComponent(rowKey), { method: 'DELETE' });
-    if (resp.code === 200) { alert('✅ 已删除'); document.getElementById('del-rowkey').value = ''; }
-    else alert('❌ 删除失败: ' + resp.message);
-});
-
-// Update form
-document.getElementById('form-update').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const rowKey = document.getElementById('upd-rowkey').value;
-    const field = document.getElementById('upd-field').value;
-    const value = document.getElementById('upd-value').value;
-    const resp = await api('/api/behavior/' + encodeURIComponent(rowKey), {
-        method: 'PUT', body: JSON.stringify({ [field]: value })
-    });
-    if (resp.code === 200) alert('✅ 更新成功');
-    else alert('❌ 更新失败: ' + resp.message);
+    if (resp.code === 200) {
+        alert('写入成功！RowKey: ' + resp.data);
+        loadManageData();
+    } else alert('写入失败: ' + resp.message);
 });
 
 // ============================================================

@@ -225,26 +225,95 @@ h3 { font-size: 12px; font-weight: bold; margin-bottom: 8px; color: #000; }
     outline-offset: -1px;
 }
 
-/* ===== Manage Cards (TitledBorder) ===== */
-.manage-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+/* ===== Manage Cards ===== */
+.manage-excel {
     margin-bottom: 12px;
 }
-.manage-card {
+.manage-section {
     background: #ece9d8;
     padding: 8px;
     border: 2px groove #fff;
+    margin-bottom: 12px;
 }
-.manage-card h3 {
+.manage-section h3 {
     padding: 2px 8px;
     background: linear-gradient(180deg, #ece9d8 0%, #d4d0c8 100%);
     border: 1px solid #808080;
     margin: -8px -8px 8px -8px;
     font-size: 12px;
 }
-.manage-card .form-group { margin-bottom: 6px; }
+.manage-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: flex-end;
+}
+.manage-form .form-group { min-width: 120px; }
+.manage-form .btn { margin-top: 18px; }
+
+/* ===== Excel-style Table ===== */
+.excel-wrapper {
+    overflow-x: auto;
+    border: 1px solid #808080;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.excel-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    font-size: 12px;
+    font-family: "Consolas", "Courier New", monospace;
+}
+.excel-table th {
+    background: linear-gradient(180deg, #ece9d8 0%, #d4d0c8 100%);
+    padding: 3px 6px;
+    text-align: left;
+    font-weight: bold;
+    border: 1px solid #808080;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    white-space: nowrap;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 12px;
+}
+.excel-table td {
+    padding: 2px 6px;
+    border: 1px solid #d4d0c8;
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+}
+.excel-table tr:hover td { background: #ffffcc; }
+.excel-table tr.selected td { background: #316ac5; color: #fff; }
+.excel-table td.rowkey-cell {
+    font-size: 10px;
+    color: #666;
+    max-width: 220px;
+}
+.excel-table td.editable:hover {
+    background: #ffffcc;
+    cursor: cell;
+}
+.excel-table .cell-input {
+    width: 100%;
+    border: 1px solid #316ac5;
+    padding: 1px 4px;
+    font-size: 11px;
+    font-family: "Consolas", "Courier New", monospace;
+    background: #fff;
+    outline: none;
+}
+.excel-table .cell-select {
+    border: 1px solid #316ac5;
+    padding: 1px 4px;
+    font-size: 11px;
+    background: #fff;
+    outline: none;
+}
 
 .hbase-shell-info {
     background: #ece9d8;
