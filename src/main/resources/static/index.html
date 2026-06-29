@@ -185,6 +185,57 @@
                     <div class="pager" id="pager-manage"></div>
                 </div>
 
+                <!-- 学生信息管理 -->
+                <div class="manage-section">
+                    <h3>学生信息管理（双击单元格可直接修改）</h3>
+                    <div class="toolbar">
+                        <button class="btn" id="m-btn-stu-refresh">刷新</button>
+                        <button class="btn btn-primary" id="m-btn-stu-add">新增学生</button>
+                    </div>
+                    <div class="excel-wrapper" style="max-height:280px">
+                        <table class="excel-table" id="excel-students">
+                            <thead>
+                                <tr>
+                                    <th style="width:30px">#</th>
+                                    <th>学号</th>
+                                    <th>姓名</th>
+                                    <th>专业</th>
+                                    <th>班级</th>
+                                    <th>邮箱</th>
+                                    <th>入学年份</th>
+                                    <th style="width:80px">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 课程信息管理 -->
+                <div class="manage-section">
+                    <h3>课程信息管理（双击单元格可直接修改）</h3>
+                    <div class="toolbar">
+                        <button class="btn" id="m-btn-crs-refresh">刷新</button>
+                        <button class="btn btn-primary" id="m-btn-crs-add">新增课程</button>
+                    </div>
+                    <div class="excel-wrapper" style="max-height:220px">
+                        <table class="excel-table" id="excel-courses">
+                            <thead>
+                                <tr>
+                                    <th style="width:30px">#</th>
+                                    <th>课程号</th>
+                                    <th>课程名</th>
+                                    <th>教师</th>
+                                    <th>学院</th>
+                                    <th>学分</th>
+                                    <th style="width:80px">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- 新增行为 -->
                 <div class="manage-section">
                     <h3>新增行为记录</h3>

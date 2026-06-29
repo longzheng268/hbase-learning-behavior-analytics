@@ -32,6 +32,18 @@ public class BaseDataController {
         catch (Exception e) { return ApiResponse.error(e.getMessage()); }
     }
 
+    @PutMapping("/students/{id}")
+    public ApiResponse<String> updateStudent(@PathVariable String id, @RequestBody Student s) {
+        try { s.setStudentId(id); service.updateStudent(s); return ApiResponse.success("ok"); }
+        catch (Exception e) { return ApiResponse.error(e.getMessage()); }
+    }
+
+    @DeleteMapping("/students/{id}")
+    public ApiResponse<String> deleteStudent(@PathVariable String id) {
+        try { service.deleteStudent(id); return ApiResponse.success("ok"); }
+        catch (Exception e) { return ApiResponse.error(e.getMessage()); }
+    }
+
     @GetMapping("/courses")
     public ApiResponse<List<Course>> getCourses() {
         try { return ApiResponse.success(service.getAllCourses()); }
@@ -41,6 +53,18 @@ public class BaseDataController {
     @PostMapping("/courses")
     public ApiResponse<String> addCourse(@RequestBody Course c) {
         try { service.addCourse(c); return ApiResponse.success("ok"); }
+        catch (Exception e) { return ApiResponse.error(e.getMessage()); }
+    }
+
+    @PutMapping("/courses/{id}")
+    public ApiResponse<String> updateCourse(@PathVariable String id, @RequestBody Course c) {
+        try { c.setCourseId(id); service.updateCourse(c); return ApiResponse.success("ok"); }
+        catch (Exception e) { return ApiResponse.error(e.getMessage()); }
+    }
+
+    @DeleteMapping("/courses/{id}")
+    public ApiResponse<String> deleteCourse(@PathVariable String id) {
+        try { service.deleteCourse(id); return ApiResponse.success("ok"); }
         catch (Exception e) { return ApiResponse.error(e.getMessage()); }
     }
 
@@ -56,6 +80,18 @@ public class BaseDataController {
     @PostMapping("/resources")
     public ApiResponse<String> addResource(@RequestBody LearningResource r) {
         try { service.addResource(r); return ApiResponse.success("ok"); }
+        catch (Exception e) { return ApiResponse.error(e.getMessage()); }
+    }
+
+    @PutMapping("/resources/{id}")
+    public ApiResponse<String> updateResource(@PathVariable String id, @RequestBody LearningResource r) {
+        try { r.setResourceId(id); service.updateResource(r); return ApiResponse.success("ok"); }
+        catch (Exception e) { return ApiResponse.error(e.getMessage()); }
+    }
+
+    @DeleteMapping("/resources/{id}")
+    public ApiResponse<String> deleteResource(@PathVariable String id) {
+        try { service.deleteResource(id); return ApiResponse.success("ok"); }
         catch (Exception e) { return ApiResponse.error(e.getMessage()); }
     }
 

@@ -48,6 +48,26 @@ public class SQLiteDao {
         }
     }
 
+    public void updateStudent(String id, String name, String major, String className, String email, String year) throws SQLException {
+        String sql = "UPDATE students SET name=?, major=?, class_name=?, email=?, enrollment_year=? WHERE student_id=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, major);
+            ps.setString(3, className);
+            ps.setString(4, email);
+            ps.setString(5, year);
+            ps.setString(6, id);
+            ps.executeUpdate();
+        }
+    }
+
+    public void deleteStudent(String id) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("DELETE FROM students WHERE student_id=?")) {
+            ps.setString(1, id);
+            ps.executeUpdate();
+        }
+    }
+
     private Student mapStudent(ResultSet rs) throws SQLException {
         return new Student(rs.getString("student_id"), rs.getString("name"),
                 rs.getString("major"), rs.getString("class_name"),
@@ -84,6 +104,25 @@ public class SQLiteDao {
             ps.setString(1, id);
             ResultSet rs = ps.executeQuery();
             return rs.next() ? mapCourse(rs) : null;
+        }
+    }
+
+    public void updateCourse(String id, String name, String teacher, String dept, int credit) throws SQLException {
+        String sql = "UPDATE courses SET course_name=?, teacher=?, department=?, credit=? WHERE course_id=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, teacher);
+            ps.setString(3, dept);
+            ps.setInt(4, credit);
+            ps.setString(5, id);
+            ps.executeUpdate();
+        }
+    }
+
+    public void deleteCourse(String id) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("DELETE FROM courses WHERE course_id=?")) {
+            ps.setString(1, id);
+            ps.executeUpdate();
         }
     }
 
@@ -124,6 +163,24 @@ public class SQLiteDao {
             while (rs.next()) list.add(mapResource(rs));
         }
         return list;
+    }
+
+    public void updateResource(String id, String name, String type, String courseId) throws SQLException {
+        String sql = "UPDATE resources SET resource_name=?, resource_type=?, course_id=? WHERE resource_id=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, name);
+            ps.setString(2, type);
+            ps.setString(3, courseId);
+            ps.setString(4, id);
+            ps.executeUpdate();
+        }
+    }
+
+    public void deleteResource(String id) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement("DELETE FROM resources WHERE resource_id=?")) {
+            ps.setString(1, id);
+            ps.executeUpdate();
+        }
     }
 
     private LearningResource mapResource(ResultSet rs) throws SQLException {

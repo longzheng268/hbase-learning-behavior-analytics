@@ -564,6 +564,8 @@ async function loadManagePage() {
     } catch(e) {}
 
     loadManageData();
+    renderStudentTable();
+    renderCourseTable();
 }
 
 async function loadManageData() {
@@ -636,7 +638,15 @@ function startCellEdit(td) {
     const rowKey = td.closest('tr').dataset.rk;
 
     let html;
-    if (field === 'device') {
+    if (field === 'student_id') {
+        html = `<select class="cell-select" onchange="saveCell(this,'${rowKey}','${field}')">
+            ${allStudents.map(s => `<option value="${s.studentId}" ${val===s.studentId?'selected':''}>${s.studentId} - ${s.name}</option>`).join('')}
+        </select>`;
+    } else if (field === 'course_id') {
+        html = `<select class="cell-select" onchange="saveCell(this,'${rowKey}','${field}')">
+            ${allCourses.map(c => `<option value="${c.courseId}" ${val===c.courseId?'selected':''}>${c.courseId} - ${c.courseName}</option>`).join('')}
+        </select>`;
+    } else if (field === 'device') {
         html = `<select class="cell-select" onchange="saveCell(this,'${rowKey}','${field}')">
             <option ${val==='PC-Chrome'?'selected':''}>PC-Chrome</option>
             <option ${val==='PC-Firefox'?'selected':''}>PC-Firefox</option>
@@ -707,6 +717,180 @@ document.getElementById('m-btn-refresh').addEventListener('click', loadManageDat
 document.getElementById('m-filter-student').addEventListener('change', applyManageFilter);
 document.getElementById('m-filter-course').addEventListener('change', applyManageFilter);
 document.getElementById('m-filter-type').addEventListener('change', applyManageFilter);
+
+document.getElementById('m-btn-stu-refresh').addEventListener('click', renderStudentTable);
+document.getElementById('m-btn-crs-refresh').addEventListener('click', renderCourseTable);
+
+async function renderStudentTable() {
+    await loadBaseData();
+    const tbody = document.querySelector('#excel-students tbody');
+    tbody.innerHTML = allStudents.map((s, i) => `
+        <tr data-id="${s.studentId}">
+            <td class="rowidx">${i+1}</td>
+            <td class="cell-locked" title="${s.studentId}">${s.studentId}</td>
+            <td class="editable" data-field="name" data-val="${s.name}">${s.name}</td>
+            <td class="editable" data-field="major" data-val="${s.major}">${s.major}</td>
+            <td class="editable" data-field="className" data-val="${s.className}">${s.className}</td>
+            <td class="editable" data-field="email" data-val="${s.email}">${s.email||'-'}</td>
+            <td class="editable" data-field="enrollmentYear" data-val="${s.enrollmentYear}">${s.enrollmentYear||'-'}</td>
+            <td><button class="btn btn-sm btn-danger" onclick="deleteStudent('${s.studentId}')">删除</button></td>
+        </tr>
+    `).join('');
+
+    tbody.querySelectorAll('td.editable').forEach(td => {
+        td.addEventListener('dblclick', () => startStudentEdit(td));
+    });
+}
+
+function startStudentEdit(td) {
+    if (td.querySelector('input')) return;
+    const field = td.dataset.field;
+    const val = td.dataset.val || '';
+    const rowId = td.closest('tr').dataset.id;
+
+    let html;
+    if (field === 'major') {
+        html = `<select class="cell-select" onchange="saveStudentCell(this,'${rowId}','${field}')">
+            <option ${val==='计算机科学'?'selected':''}>计算机科学</option>
+            <option ${val==='软件工程'?'selected':''}>软件工程</option>
+            <option ${val==='数据科学'?'selected':''}>数据科学</option>
+            <option ${val==='人工智能'?'selected':''}>人工智能</option>
+            <option ${val==='网络安全'?'selected':''}>网络安全</option>
+        </select>`;
+    } else if (field === 'className') {
+        html = `<select class="cell-select" onchange="saveStudentCell(this,'${rowId}','${field}')">
+            <option ${val==='2023级1班'?'selected':''}>2023级1班</option>
+            <option ${val==='2023级2班'?'selected':''}>2023级2班</option>
+            <option ${val==='2024级1班'?'selected':''}>2024级1班</option>
+            <option ${val==='2024级2班'?'selected':''}>2024级2班</option>
+        </select>`;
+    } else if (field === 'enrollmentYear') {
+        html = `<select class="cell-select" onchange="saveStudentCell(this,'${rowId}','${field}')">
+            <option ${val==='2023'?'selected':''}>2023</option>
+            <option ${val==='2024'?'selected':''}>2024</option>
+            <option ${val==='2025'?'selected':''}>2025</option>
+        </select>`;
+    } else {
+        html = `<input class="cell-input" value="${val}" onblur="saveStudentCell(this,'${rowId}','${field}')" onkeydown="if(event.key==='Enter')saveStudentCell(this,'${rowId}','${field}')">`;
+    }
+    td.innerHTML = html;
+    td.querySelector('input,select').focus();
+}
+
+async function saveStudentCell(el, id, field) {
+    const val = el.value;
+    const s = allStudents.find(s => s.studentId === id);
+    if (!s) return;
+    s[field] = val;
+    const resp = await api('/api/base/students/' + id, {
+        method: 'PUT', body: JSON.stringify(s)
+    });
+    if (resp.code === 200) renderStudentTable();
+    else alert('更新失败: ' + resp.message);
+}
+
+async function deleteStudent(id) {
+    if (!confirm('确定删除学生 ' + id + '？')) return;
+    const resp = await api('/api/base/students/' + id, { method: 'DELETE' });
+    if (resp.code === 200) renderStudentTable();
+    else alert('删除失败: ' + resp.message);
+}
+
+document.getElementById('m-btn-stu-add').addEventListener('click', async () => {
+    const id = prompt('请输入学生编号（如 S0022）：');
+    if (!id) return;
+    const name = prompt('请输入姓名：');
+    if (!name) return;
+    const resp = await api('/api/base/students', {
+        method: 'POST',
+        body: JSON.stringify({ studentId: id, name: name, major: '计算机科学', className: '2024级1班', email: id.toLowerCase()+'@edu.cn', enrollmentYear: '2024' })
+    });
+    if (resp.code === 200) renderStudentTable();
+    else alert('新增失败: ' + resp.message);
+});
+
+// ==================== Course Excel ====================
+
+async function renderCourseTable() {
+    await loadBaseData();
+    const tbody = document.querySelector('#excel-courses tbody');
+    tbody.innerHTML = allCourses.map((c, i) => `
+        <tr data-id="${c.courseId}">
+            <td class="rowidx">${i+1}</td>
+            <td class="cell-locked" title="${c.courseId}">${c.courseId}</td>
+            <td class="editable" data-field="courseName" data-val="${c.courseName}">${c.courseName}</td>
+            <td class="editable" data-field="teacher" data-val="${c.teacher}">${c.teacher}</td>
+            <td class="editable" data-field="department" data-val="${c.department}">${c.department}</td>
+            <td class="editable" data-field="credit" data-val="${c.credit}">${c.credit}</td>
+            <td><button class="btn btn-sm btn-danger" onclick="deleteCourse('${c.courseId}')">删除</button></td>
+        </tr>
+    `).join('');
+
+    tbody.querySelectorAll('td.editable').forEach(td => {
+        td.addEventListener('dblclick', () => startCourseEdit(td));
+    });
+}
+
+function startCourseEdit(td) {
+    if (td.querySelector('input, select')) return;
+    const field = td.dataset.field;
+    const val = td.dataset.val || '';
+    const rowId = td.closest('tr').dataset.id;
+
+    let html;
+    if (field === 'department') {
+        html = `<select class="cell-select" onchange="saveCourseCell(this,'${rowId}','${field}')">
+            <option ${val==='计算机学院'?'selected':''}>计算机学院</option>
+            <option ${val==='信息学院'?'selected':''}>信息学院</option>
+            <option ${val==='数学学院'?'selected':''}>数学学院</option>
+        </select>`;
+    } else if (field === 'credit') {
+        html = `<select class="cell-select" onchange="saveCourseCell(this,'${rowId}','${field}')">
+            <option ${val==1?'selected':''}>1</option>
+            <option ${val==2?'selected':''}>2</option>
+            <option ${val==3?'selected':''}>3</option>
+            <option ${val==4?'selected':''}>4</option>
+            <option ${val==5?'selected':''}>5</option>
+        </select>`;
+    } else {
+        html = `<input class="cell-input" value="${val}" onblur="saveCourseCell(this,'${rowId}','${field}')" onkeydown="if(event.key==='Enter')saveCourseCell(this,'${rowId}','${field}')">`;
+    }
+    td.innerHTML = html;
+    td.querySelector('input,select').focus();
+}
+
+async function saveCourseCell(el, id, field) {
+    const val = el.value;
+    const c = allCourses.find(c => c.courseId === id);
+    if (!c) return;
+    if (field === 'credit') c[field] = parseInt(val);
+    else c[field] = val;
+    const resp = await api('/api/base/courses/' + id, {
+        method: 'PUT', body: JSON.stringify(c)
+    });
+    if (resp.code === 200) renderCourseTable();
+    else alert('更新失败: ' + resp.message);
+}
+
+async function deleteCourse(id) {
+    if (!confirm('确定删除课程 ' + id + '？')) return;
+    const resp = await api('/api/base/courses/' + id, { method: 'DELETE' });
+    if (resp.code === 200) renderCourseTable();
+    else alert('删除失败: ' + resp.message);
+}
+
+document.getElementById('m-btn-crs-add').addEventListener('click', async () => {
+    const id = prompt('请输入课程号（如 C006）：');
+    if (!id) return;
+    const name = prompt('请输入课程名：');
+    if (!name) return;
+    const resp = await api('/api/base/courses', {
+        method: 'POST',
+        body: JSON.stringify({ courseId: id, courseName: name, teacher: '待分配', department: '计算机学院', credit: 3 })
+    });
+    if (resp.code === 200) renderCourseTable();
+    else alert('新增失败: ' + resp.message);
+});
 
 // Add behavior form
 document.getElementById('form-add-behavior').addEventListener('submit', async (e) => {

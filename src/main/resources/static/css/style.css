@@ -314,6 +314,12 @@ h3 { font-size: 12px; font-weight: bold; margin-bottom: 8px; color: #000; }
     background: #fff;
     outline: none;
 }
+.excel-table .cell-locked {
+    background: #f0f0f0;
+    color: #666;
+    font-weight: bold;
+    font-size: 11px;
+}
 
 .hbase-shell-info {
     background: #ece9d8;
